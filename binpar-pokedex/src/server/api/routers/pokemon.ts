@@ -11,7 +11,6 @@ class PokemonRouter {
     return this.pokeApi.getMeta();
   });
 
-  // GET /pokemon/list
   list = publicProcedure
     .input(
       z

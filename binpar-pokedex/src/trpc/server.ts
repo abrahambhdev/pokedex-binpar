@@ -1,30 +1,29 @@
-import "server-only";
-
-import { createHydrationHelpers } from "@trpc/react-query/rsc";
-import { headers } from "next/headers";
+// src/trpc/server.ts
 import { cache } from "react";
-
-import { createCaller, type AppRouter } from "~/server/api/root";
+import { headers } from "next/headers";
+import { appRouter } from "~/server/api/root";
 import { createTRPCContext } from "~/server/api/trpc";
-import { createQueryClient } from "./query-client";
 
-/**
- * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
- * handling a tRPC call from a React Server Component.
- */
-const createContext = cache(async () => {
-  const heads = new Headers(await headers());
-  heads.set("x-trpc-source", "rsc");
 
-  return createTRPCContext({
-    headers: heads,
+const createCaller = cache(() => {
+  const h = headers();
+  const ctx = createTRPCContext({
+    headers: h as unknown as Headers,
   });
+  return appRouter.createCaller(ctx);
 });
 
-const getQueryClient = cache(createQueryClient);
-const caller = createCaller(createContext);
 
-export const { trpc: api, HydrateClient } = createHydrationHelpers<AppRouter>(
-  caller,
-  getQueryClient,
-);
+type Caller = ReturnType<typeof createCaller>;
+
+export const api = {
+  pokemon: {
+    meta: () => createCaller().pokemon.meta(),
+
+    list: (input: Parameters<Caller["pokemon"]["list"]>[0]) =>
+      createCaller().pokemon.list(input),
+
+    detail: (input: Parameters<Caller["pokemon"]["detail"]>[0]) =>
+      createCaller().pokemon.detail(input),
+  },
+};

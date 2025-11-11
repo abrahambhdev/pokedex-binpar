@@ -1,7 +1,17 @@
+
 export class URLBuilder {
   private readonly base: string;
 
   constructor(base: string) {
+    if (!base) {
+      throw new Error("URLBuilder base URL is empty");
+    }
+    if (!/^https?:\/\//.test(base)) {
+      throw new Error(
+        `URLBuilder base URL must be absolute (include http/https). Received: "${base}"`,
+      );
+    }
+
     this.base = base.replace(/\/+$/, "");
   }
 
@@ -14,7 +24,7 @@ export class URLBuilder {
       )
       .map((s) => String(s).replace(/^\/+|\/+$/g, ""));
 
-    return `${this.base}/${clean.join("/")}`;
+    return `${this.base}${clean.length ? "/" + clean.join("/") : ""}`;
   };
 
   withQuery = (
@@ -24,21 +34,24 @@ export class URLBuilder {
       string | number | boolean | null | undefined
     >,
   ): string => {
-    const url = new URL(this.path(...segments));
+    const basePath = this.path(...segments);
 
-    if (query) {
-      for (const [key, value] of Object.entries(query)) {
-        if (
-          value !== undefined &&
-          value !== null &&
-          value !== "" &&
-          !(typeof value === "number" && Number.isNaN(value))
-        ) {
-          url.searchParams.append(key, String(value));
-        }
+    if (!query) return basePath;
+
+    const params = new URLSearchParams();
+
+    for (const [key, value] of Object.entries(query)) {
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !(typeof value === "number" && Number.isNaN(value))
+      ) {
+        params.append(key, String(value));
       }
     }
 
-    return url.toString();
+    const qs = params.toString();
+    return qs ? `${basePath}?${qs}` : basePath;
   };
 }

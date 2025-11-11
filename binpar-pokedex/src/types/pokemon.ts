@@ -1,15 +1,13 @@
-import type { DeepPartial } from "~/utils";
-
-export type PokemonStat = DeepPartial<{
+export type PokemonStat = {
     name: string;
     value: number;
-}>
+};
 
-export type EvolutionEntry = DeepPartial< {
+export type EvolutionEntry = {
     id: number;
     name: string;
     image: string;
-}>;
+};
 
 export type PokemonListItem = {
   id: number;
